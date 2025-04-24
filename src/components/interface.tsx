@@ -11,7 +11,7 @@ import { ArrowUp, ArrowLeft } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnClickOutside } from "usehooks-ts";
 
-type ViewState = "button" | "input" | "chat" | "cards";
+type ViewState = "none" | "input" | "chat" | "cards";
 type Message = {
     role: "user" | "assistant";
     content: string;
@@ -24,7 +24,7 @@ type UserStoryCard = {
 };
 
 export function OneButtonLinear() {
-    const [viewState, setViewState] = useState<ViewState>("button");
+    const [viewState, setViewState] = useState<ViewState>("none");
     const [command, setCommand] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
     const [markdownContent, setMarkdownContent] = useState("");
@@ -32,8 +32,8 @@ export function OneButtonLinear() {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const handleClickOutside = () => {
-        if (viewState !== "button") {
-            setViewState("button");
+        if (viewState !== "none") {
+            setViewState("none");
         }
     };
 
@@ -41,8 +41,8 @@ export function OneButtonLinear() {
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && viewState !== "button") {
-                setViewState("button");
+            if (e.key === "Escape" && viewState !== "none") {
+                setViewState("none");
             }
         };
 
@@ -104,54 +104,56 @@ export function OneButtonLinear() {
                 Back
             </Button>
             {onSubmit && (
-                <Button onClick={onSubmit}>
-                    Submit
-                </Button>
+                <motion.div layoutId='button'>
+                    <Button onClick={onSubmit}>
+                        Submit
+                    </Button>
+                </motion.div>
+
             )}
         </div>
     );
 
     const currentView = useMemo(() => {
-        const containerClasses = "max-w-4xl mx-auto w-full h-[600px] bg-[#FDFDFC] rounded-lg shadow-lg overflow-hidden flex flex-col";
-
         switch (viewState) {
-            case "button":
-                return (
-                    <motion.button
-                        layoutId='card-wrapper'
-                        onClick={handleButtonClick}
-                        className="border rounded-lg px-4 py-2 bg-white"
-                    >
-                        <span className="text-sm font-medium">feedback</span>
-                    </motion.button>
-                );
             case "input":
                 return (
                     <motion.div
                         ref={containerRef}
-                        className="absolute w-[364px] p-2 border rounded-lg bg-white flex items-center gap-2"
-                        layoutId='card-wrapper'
+                        layoutId='wrapper'
+                        className="absolute p-2 border rounded-lg bg-white flex items-center gap-2 z-10"
+
                     >
-                        <Input
-                            placeholder="Type your command..."
-                            value={command}
-                            onChange={(e) => setCommand(e.target.value)}
-                            className="flex-1 bg-transparent"
-                        />
-                        <button onClick={handleInputSubmit} className="px-3 py-1 rounded-md bg-blue-500 text-white">
-                            <span>Generate</span>
-                        </button>
+                        <motion.div layoutId='input'>
+                            <Input
+                                placeholder="Type your command..."
+                                value={command}
+                                onChange={(e) => setCommand(e.target.value)}
+                                className="flex-1 bg-transparent"
+                                autoFocus
+                            />
+                        </motion.div>
+                        <motion.div
+                            layoutId='button'>
+                            <Button
+                                onClick={handleInputSubmit}
+                                className="px-3 py-1 rounded-md bg-blue-500 text-white"
+                            >
+                                <span>Generate</span>
+                            </Button>
+                        </motion.div>
                     </motion.div>
                 );
             case "chat":
                 return (
                     <motion.div
                         ref={containerRef}
-                        layoutId='card-wrapper'
-                        className="absolute w-[800px] h-[600px] border rounded-lg bg-white shadow-lg overflow-hidden flex flex-col"
+                        className="absolute w-[800px] h-[600px] border rounded-lg bg-white shadow-lg overflow-hidden flex flex-col z-10"
+                        layoutId='wrapper'
+
                     >
                         <div className="flex-1 grid grid-cols-2 gap-4 p-4 overflow-hidden">
-                            <Card className="p-4 flex flex-col">
+                            <Card className="p-4 flex flex-col h-full max-h-[500px]">
                                 <h2 className="text-xl font-bold mb-4">Chat</h2>
                                 <div className="flex-1 space-y-4 overflow-y-auto mb-4">
                                     {messages.map((message, index) => (
@@ -170,21 +172,21 @@ export function OneButtonLinear() {
                                     ))}
                                 </div>
                                 <div className="relative">
-                                    <Input
-                                        placeholder="Type your command..."
-                                        value={command}
-                                        onChange={(e) => setCommand(e.target.value)}
-                                        className="pr-12"
-                                    />
-                                    <Button
-                                        size="icon"
-                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                                        onClick={handleInputSubmit}
-                                    >
-                                        <motion.div>
+                                    <motion.div layoutId='input'>
+                                        <Input
+                                            placeholder="Type your command..."
+                                            value={command}
+                                            onChange={(e) => setCommand(e.target.value)}
+                                            className="pr-12"
+                                        />
+                                        <Button
+                                            size="icon"
+                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                                            onClick={handleInputSubmit}
+                                        >
                                             <ArrowUp size={16} weight="bold" />
-                                        </motion.div>
-                                    </Button>
+                                        </Button>
+                                    </motion.div>
                                 </div>
                             </Card>
                             <Card className="p-4 flex flex-col">
@@ -205,8 +207,10 @@ export function OneButtonLinear() {
                 return (
                     <motion.div
                         ref={containerRef}
-                        layoutId='card-wrapper'
-                        className="absolute w-[800px] h-[600px] border rounded-lg bg-white shadow-lg overflow-hidden flex flex-col"
+                        className="absolute w-[800px] h-[600px] border rounded-lg bg-white shadow-lg overflow-hidden flex flex-col z-10"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
                     >
                         <div className="flex-1 p-4 overflow-y-auto">
                             <div className="space-y-4">
@@ -235,15 +239,25 @@ export function OneButtonLinear() {
             default:
                 return null;
         }
-    }, [viewState, command, messages, markdownContent, userStories, handleButtonClick, handleInputSubmit, handleMarkdownEdit]);
+    }, [viewState, command, messages, markdownContent, userStories, handleInputSubmit, handleMarkdownEdit]);
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-[#FDFDFC]" >
+        <div className="flex items-center justify-center min-h-screen bg-[#FDFDFC]">
             <div className="relative h-[700px] flex items-center justify-center w-full">
+                <motion.div layoutId='wrapper' className="border border-gray-200 rounded-md">
+                    <motion.button
+                        onClick={handleButtonClick}
+                        className="px-3 py-1 rounded-md bg-blue-500 text-white z-10"
+                        layoutId='button'
+                    >
+                        <motion.span className="text-sm font-medium">feedback</motion.span>
+                    </motion.button>
+                </motion.div>
+
                 <AnimatePresence>
                     {currentView}
                 </AnimatePresence>
             </div>
-        </div >
+        </div>
     );
 }
